@@ -7,12 +7,12 @@ import { ModelService } from '../shared/api.service';
   template: `
   Home component
   {{ data | json }}
+  <button class="btn btn-primary" (click)="doSomething()">Do Something</button>
   `
 })
 export class HomeComponent {
   data = {};
   constructor(public model: ModelService) {
-
     // we need the data synchronously for the client to set the server response
     // we create another method so we have more control for testing
     this.universalInit();
@@ -22,6 +22,10 @@ export class HomeComponent {
     this.model.get('/data.json').subscribe(data => {
       this.data = data;
     });
+  }
+
+  doSomething() {
+    alert('and do something !');
   }
 
 }

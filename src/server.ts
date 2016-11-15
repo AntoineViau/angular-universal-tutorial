@@ -58,7 +58,7 @@ function ngApp(req, res) {
   res.render('index', {
     req,
     res,
-    preboot: false,
+    preboot: true,
     baseUrl: '/',
     requestUrl: req.originalUrl,
     originUrl: 'http://localhost:3000'

@@ -159,7 +159,7 @@ Deux méthodes sont possibles :
         { provide: 'isNode' , useValue: isNode }
     ]
 
-Puis on injecte avec le décorateur @Inject : 
+Puis on injecte avec le décorateur `@Inject` : 
 
     export class AppComponent { 
     constructor(

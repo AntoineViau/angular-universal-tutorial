@@ -31,14 +31,8 @@ import { LayoutModule } from './layout/layout.module';
     AppRoutingModule
   ],
   providers: [
-    {
-      provide: IS_BROWSER_TOKEN,
-      useValue: isBrowser 
-    },
-    {
-      provide: IS_NODE_TOKEN, 
-      useValue: isNode 
-    }
+    { provide: IS_BROWSER_TOKEN, useValue: isBrowser },
+    { provide: IS_NODE_TOKEN, useValue: isNode }
   ]
 })
 export class MainModule { }

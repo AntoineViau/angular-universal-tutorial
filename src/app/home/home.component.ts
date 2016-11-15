@@ -1,4 +1,6 @@
-import { Component } from '@angular/core';
+import { IS_NODE_TOKEN } from './../is-node.token';
+import { IS_BROWSER_TOKEN } from './../is-browser.token';
+import { Component, OnInit, Inject } from '@angular/core';
 
 import { ModelService } from '../shared/api.service';
 
@@ -10,17 +12,18 @@ import { ModelService } from '../shared/api.service';
   <button class="btn btn-primary" (click)="doSomething()">Do Something</button>
   `
 })
-export class HomeComponent {
-  data = {};
-  constructor(public model: ModelService) {
-    // we need the data synchronously for the client to set the server response
-    // we create another method so we have more control for testing
-    this.universalInit();
-  }
+export class HomeComponent implements OnInit {
 
-  universalInit() {
+  data = {};
+
+  constructor(
+    public model: ModelService,
+    @Inject(IS_BROWSER_TOKEN) private isBrowser,
+    @Inject(IS_NODE_TOKEN) private isNode) { }
+
+  ngOnInit() {
     this.model.get('/data.json').subscribe(data => {
-      this.data = data;
+      this.data = data + ' from ' + (this.isBrowser ? 'BROWSER' : '') + (this.isNode ? 'NODE' : '');
     });
   }
 

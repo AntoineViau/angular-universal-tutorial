@@ -13,14 +13,6 @@ const MODULES = [
   ReactiveFormsModule
 ];
 
-const PIPES = [
-  // put pipes here
-];
-
-const COMPONENTS = [
-  // put shared components here
-];
-
 const PROVIDERS = [
   ModelService
 ]
@@ -30,16 +22,12 @@ const PROVIDERS = [
     ...MODULES
   ],
   declarations: [
-    ...PIPES,
-    ...COMPONENTS
   ],
   providers: [
     ...PROVIDERS
   ],
   exports: [
     ...MODULES,
-    ...PIPES,
-    ...COMPONENTS
   ]
 })
 export class SharedModule { }

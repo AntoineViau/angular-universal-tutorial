@@ -15,6 +15,6 @@ import { Component, Inject } from '@angular/core';
 })
 export class AppComponent { 
   constructor(
-    @Inject(IS_BROWSER_TOKEN) private isBrowser, 
-    @Inject(IS_NODE_TOKEN) private isNode) { }
+    @Inject(IS_BROWSER_TOKEN) public isBrowser: boolean, 
+    @Inject(IS_NODE_TOKEN) public isNode: boolean) { }
 }

@@ -1,5 +1,6 @@
 import { IS_NODE_TOKEN } from './is-node.token';
 import { IS_BROWSER_TOKEN } from './is-browser.token';
+
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UniversalModule, isBrowser, isNode } from 'angular2-universal/node'; // for AoT we need to manually split universal packages
@@ -12,8 +13,12 @@ import { SharedModule } from './shared/shared.module';
 import { LayoutModule } from './layout/layout.module';
 
 @NgModule({
-  bootstrap: [AppComponent],
-  declarations: [AppComponent],
+  bootstrap: [
+    AppComponent
+  ],
+  declarations: [
+    AppComponent
+  ],
   imports: [
     UniversalModule, // NodeModule, NodeHttpModule, and NodeJsonpModule are included
     FormsModule,
@@ -30,4 +35,4 @@ import { LayoutModule } from './layout/layout.module';
     { provide: IS_NODE_TOKEN, useValue: isNode }
   ]
 })
-export class MainModule { }
+export class NodeMainModule { }

@@ -35,4 +35,4 @@ import { LayoutModule } from './layout/layout.module';
     { provide: IS_NODE_TOKEN, useValue: isNode }
   ]
 })
-export class MainModule { }
+export class BrowserMainModule { }

@@ -19,7 +19,7 @@ import { enableProdMode } from '@angular/core';
 import { createEngine } from 'angular2-express-engine';
 
 // App
-import { MainModule } from './app/app.node.module';
+import { NodeMainModule } from './app/app.node.module';
 
 // enable prod for faster renders
 enableProdMode();
@@ -35,7 +35,7 @@ const ROOT = path.join(path.resolve(__dirname, '..'));
  */
 app.engine('.html', createEngine({
   precompile: true,
-  ngModule: MainModule, // importé de app.node.module
+  ngModule: NodeMainModule, // importé de app.node.module
 }));
 app.set('port', process.env.PORT || 3000);
 app.set('views', __dirname);
@@ -45,12 +45,12 @@ app.use(cookieParser('Angular 2 Universal'));
 app.use(bodyParser.json());
 
 // Serve static files
-app.use('/assets', express.static(path.join(__dirname, 'assets'), {maxAge: 30}));
-app.use(express.static(path.join(ROOT, 'dist/client'), {index: false}));
+app.use('/assets', express.static(path.join(__dirname, 'assets'), { maxAge: 30 }));
+app.use(express.static(path.join(ROOT, 'dist/client'), { index: false }));
 
 // Our API for demos only
 app.get('/data.json', (req, res) => {
-  return res.end('Some data from the API '+(new Date()));
+  return res.end('Some data from the API, timestamp ' + (new Date()).getTime());
 });
 
 // Rendu Angular
@@ -73,7 +73,7 @@ app.get('/home', ngApp);
 app.get('/home/*', ngApp);
 
 // Gestion de la 404
-app.get('*', function(req, res) {
+app.get('*', function (req, res) {
   res.setHeader('Content-Type', 'application/json');
   var pojo = { status: 404, message: 'No Content' };
   var json = JSON.stringify(pojo, null, 2);

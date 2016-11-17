@@ -11,3 +11,4 @@ document.addEventListener('DOMContentLoaded', () => {
     platformRef.bootstrapModule(BrowserMainModule);
 });
 
+    

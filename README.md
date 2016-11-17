@@ -192,3 +192,72 @@ Et on les injecte :
         @Inject(IS_NODE_TOKEN) private isNode) { }
     }
      
+
+# AOT :
+## Rappels
+Lors du lancement d'un site Angular, le navigateur reçoit l'application en Javascript, qui lui-même intègre les templates HTML. C'est typiquement le cas des composants : une vue HTML (le template) avec sa logique en Javascript (le "contrôleur"). Le template contient des références à la logique sous la forme de bindings : 
+
+    <h1>Home component</h1>
+    <div>{{ data | json }}</div>
+    <button class="btn btn-primary" (click)="doSomething()">Do Something</button>
+    
+Dans cet exemple, les bindings sont data et doSomething.  
+Quand Angular se lance (bootstrap), il va analyser les templates pour trouver les bindings, puis les rattacher à la logique (notre code Javascript). Ce processus s'appelle la compilation Just-In-Time. Cela implique deux choses importantes : 
+
+ * le compilateur est inclu dans Angular, et donc envoyé au navigateur ;  
+ * Angular compile tous les templates, ce qui prend du temps.
+
+Avec ce système on perd sur les deux tableaux : l'application est alourdie par la présence du compilateur, et en plus elle va être lente à démarrer.
+
+## Solution : la compilation Ahead-Of-Time (AOT)
+Angular 2 propose désormais de transformer les templates en code Javascript au moment du build de l'application. Ce code sera envoyé au navigateur et exécuté sans aucune phase de compilation JIT. On solutionne donc les deux problèmes de performances : le compilateur n'est plus envoyé au navigateur, donc l'application est plus légère, et il n'y a pas de phase de compilation au bootstrap, donc elle est plus rapide à se lancer.  
+Concrètement, voici un bout du code Javascript produit à partir du template vu plus haut :
+
+    _View_HomeComponent0.prototype.createInternal = function(rootSelector) {
+        var parentRenderNode = this.renderer.createViewRoot(this.declarationAppElement.nativeElement);
+        this._text_0 = this.renderer.createText(parentRenderNode, '\n  ', null);
+        this._el_1 = this.renderer.createElement(parentRenderNode, 'h1', null);
+        this._text_2 = this.renderer.createText(this._el_1, 'Home component', null);
+
+
+## Les étapes
+
+ * On commence par compiler notre code Typescript avec un compilateur spécial (ngc) associé à son fichier de configuration. Il en ressortira du code Typescript et Javascript qui "représente" nos templates. Les fichiers TS et JS sont dans un dossier spécifique ;
+ * On adapte notre code pour qu'il fasse référence à ces fichiers compilés ; 
+ * On build/bundle/pack l'application avec Webpack. 
+
+### Compilation
+
+On commence par compiler nos template en TS/JS avec
+
+    ./node_modules/.bin/ngc -p tsconfig-aot.json
+
+### Adaptation du code initial
+
+On change alors notre code initial pour utiliser ce code à la place de l'initial : 
+
+    // client.aot.ts
+    import { BrowserMainModuleNgFactory } from '../aot/src/app/app.browser.module.ngfactory';
+    platformBrowser().bootstrapModuleFactory(BrowserMainModuleNgFactory);
+
+### Optimisation par tree-shaking
+
+A ce stade on a du code TS qui utilise l'AOT. Il faut à présent le bundler/packer, ie. avoir un fichier ES5 unique.  
+Afin d'être optimal on va appliquer du tree-shaking : l'objectif est de ne garder que le code utilisé.  
+Cette opération se fait avec l'outil rollup. Il prend en entrée du JS dont la gestion des imports/exports de module (au sens JS) est au format ES2015, par exemple : 
+
+    import { foo } from './a.js'
+    export var foo = 'bar';
+
+----------------------------------------------------------------------------------
+
+TODO : 
+
+ - La compilation produit du TS dans le dossier aot alors que je n'ai besoin que du JS.
+
+ - J'obtiens aussi du JS dans src qui ne sert à rien. A priori webpack s'occupe de transpiler TS vers JS
+
+
+
+
+

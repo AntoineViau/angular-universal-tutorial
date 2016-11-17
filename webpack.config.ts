@@ -57,7 +57,7 @@ var clientPlugins = [
 
 var clientConfig = {
   target: 'web',
-  entry: './src/client',
+  entry: './src/client.aot',
   output: {
     path: root('dist/client')
   },

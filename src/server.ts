@@ -1,5 +1,6 @@
 import 'angular2-universal-polyfills';
 
+
 // Fix Universal Style
 import { NodeDomRootRenderer, NodeDomRenderer } from 'angular2-universal/node';
 function renderComponentFix(componentProto: any) {
@@ -64,8 +65,11 @@ function ngApp(req, res) {
     originUrl: 'http://localhost:3000'
   });
 }
+
+
 // Routes with html5pushstate
 // ensure routes match client-side-app
+
 app.get('/', ngApp);
 app.get('/about', ngApp);
 app.get('/about/*', ngApp);

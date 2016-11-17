@@ -195,7 +195,7 @@ Et on les injecte :
 
 # AOT :
 ## Rappels
-Lors du lancement d'un site Angular, le navigateur reçoit l'application en Javascript, qui lui-même intègre les templates HTML. C'est typiquement le cas des composants : une vue HTML (le template) avec sa logique en Javascript (le "contrôleur"). Le template contient des références à la logique sous la forme de bindings : 
+Lors du lancement d'un site Angular, le navigateur reçoit l'application en Javascript, qui intègre les templates HTML. C'est typiquement le cas des composants : une vue HTML (le template) avec sa logique en Javascript (le "contrôleur"). Le template contient des références à la logique sous la forme de bindings : 
 
     <h1>Home component</h1>
     <div>{{ data | json }}</div>
@@ -210,7 +210,7 @@ Quand Angular se lance (bootstrap), il va analyser les templates pour trouver le
 Avec ce système on perd sur les deux tableaux : l'application est alourdie par la présence du compilateur, et en plus elle va être lente à démarrer.
 
 ## Solution : la compilation Ahead-Of-Time (AOT)
-Angular 2 propose désormais de transformer les templates en code Javascript au moment du build de l'application. Ce code sera envoyé au navigateur et exécuté sans aucune phase de compilation JIT. On solutionne donc les deux problèmes de performances : le compilateur n'est plus envoyé au navigateur, donc l'application est plus légère, et il n'y a pas de phase de compilation au bootstrap, donc elle est plus rapide à se lancer.  
+Angular 2 propose désormais de transformer les templates en code Javascript au moment du build de l'application. Ce code sera envoyé au navigateur et son exécution créera nos templates ainsi que les bindings. On solutionne donc les deux problèmes de performances : le compilateur n'est plus envoyé au navigateur, donc l'application est plus légère, et il n'y a pas de phase de compilation JIT au bootstrap, donc elle est plus rapide à se lancer.  
 Concrètement, voici un bout du code Javascript produit à partir du template vu plus haut :
 
     _View_HomeComponent0.prototype.createInternal = function(rootSelector) {
@@ -219,11 +219,16 @@ Concrètement, voici un bout du code Javascript produit à partir du template vu
         this._el_1 = this.renderer.createElement(parentRenderNode, 'h1', null);
         this._text_2 = this.renderer.createText(this._el_1, 'Home component', null);
 
+Ce bout de code va générer le HTML suivant : 
+
+    <h1>Home component</h1>
+
+
 
 ## Les étapes
 
- * On commence par compiler notre code Typescript avec un compilateur spécial (ngc) associé à son fichier de configuration. Il en ressortira du code Typescript et Javascript qui "représente" nos templates. Les fichiers TS et JS sont dans un dossier spécifique ;
- * On adapte notre code pour qu'il fasse référence à ces fichiers compilés ; 
+ * On commence par compiler notre code Typescript avec un compilateur spécial (ngc) associé à son fichier de configuration. Il en ressortira du code Typescript qui sera immédiatement transpilé en Javascript. Ce code en TS/JS "représente" (génère) nos templates ;
+ * On adapte le code de notre application pour qu'il fasse référence à ces fichiers compilés ; 
  * On build/bundle/pack l'application avec Webpack. 
 
 ### Compilation
@@ -232,13 +237,81 @@ On commence par compiler nos template en TS/JS avec
 
     ./node_modules/.bin/ngc -p tsconfig-aot.json
 
+Le fichier tsconfig-aot.json n'est là que pour transformer nos templates en TS/JS. A ce titre il contient moins de choses que le tsconfig.json, et il a quelques spécificités :
+
+    {
+        "compilerOptions": {
+            "declaration": false,
+            "emitDecoratorMetadata": true,
+            "experimentalDecorators": true,
+            "module": "es2015",
+            "moduleResolution": "node",
+            "outDir": "dist",
+            "sourceMap": true,
+            "sourceRoot": "src",
+            "target": "es5"
+        },
+        "exclude": [
+            "node_modules"
+        ],
+        "files": [
+            "src/app/app.browser.module.ts",
+            "src/client.aot.ts"
+        ],
+        "angularCompilerOptions": {
+            "genDir": "aot",
+            "skipMetadataEmit": true
+        }
+    }
+
+genDir indique où seront rangés les templates compilés (ici dans le dossier "aot").
+
 ### Adaptation du code initial
 
-On change alors notre code initial pour utiliser ce code à la place de l'initial : 
+On change alors notre application pour utiliser ce code généré à la place de l'initial.  
+Ce qui était : 
+
+    // client.ts
+    import 'angular2-universal-polyfills';
+    import { platformUniversalDynamic } from 'angular2-universal';
+    import { BrowserMainModule } from './app/app.browser.module';
+
+    const platformRef = platformUniversalDynamic();
+    document.addEventListener('DOMContentLoaded', () => {
+        platformRef.bootstrapModule(BrowserMainModule);
+    });
+
+Devient :     
 
     // client.aot.ts
+    import 'angular2-universal-polyfills';
+    import { platformUniversalDynamic } from 'angular2-universal';
     import { BrowserMainModuleNgFactory } from '../aot/src/app/app.browser.module.ngfactory';
-    platformBrowser().bootstrapModuleFactory(BrowserMainModuleNgFactory);
+
+    const platformRef = platformUniversalDynamic();
+    document.addEventListener('DOMContentLoaded', () => {
+        platformRef.bootstrapModuleFactory(BrowserMainModuleNgFactory);
+    });
+
+### Build
+
+Nous avons désormais un nouveau point d'entrée pour Webpack : le fichier client.aot.ts.  
+On adapte donc le fichier webpack.config.json : 
+
+    var clientConfig = {
+        target: 'web',
+        entry: './src/client.aot',
+        output: {
+        path: root('dist/client')
+    },
+    // etc.
+    
+Webpack va donc analyser nos imports/exports pour construire le bundle, en partant de client.aot.ts  
+Ce dernier va l'emmener vers le code qui a été généré lors de la compilation des templates. Il est à noter que cette génération a produit du code capable de faire référence à notre dossier de source initial (src), par exemple : 
+
+    import * as import6 from '../../../../src/app/shared/shared.module';
+
+Autrement dit, on n'a pas à se préoccuper de la gestion des dossiers.    
 
 ### Optimisation par tree-shaking
 
@@ -248,16 +321,5 @@ Cette opération se fait avec l'outil rollup. Il prend en entrée du JS dont la 
 
     import { foo } from './a.js'
     export var foo = 'bar';
-
-----------------------------------------------------------------------------------
-
-TODO : 
-
- - La compilation produit du TS dans le dossier aot alors que je n'ai besoin que du JS.
-
- - J'obtiens aussi du JS dans src qui ne sert à rien. A priori webpack s'occupe de transpiler TS vers JS
-
-
-
 
 
